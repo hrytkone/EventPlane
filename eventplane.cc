@@ -15,29 +15,29 @@ int main(int argc, char **argv) {
     TString fOutName = argc > 1 ? argv[1] : "eventplane.root";
     TString sDirName = argc > 2 ? argv[2] : "";
     bool bDoCorrections = argc > 3 ? std::stoi(argv[3]) : 0;
-    bool bCalculateCorrections = argc > 4 ? std::stoi(argv[4]) : 0; // if this is true only calculate corrections and save then to a file
+    bool bCalculateCorrections = argc > 4 ? std::stoi(argv[4]) : 0; // if this is true then only calculate corrections and save them to a file
 
     TStopwatch timer;
     timer.Start();
 
     TFile *fOut = TFile::Open(fOutName, "RECREATE");
-    
+
     Histos *histos = new Histos();
     DataManager *dm = new DataManager();
     Corrections *corrFV0 = new Corrections("corrections_fv0.txt");
     Corrections *corrFT0A = new Corrections("corrections_ft0a.txt");
     Corrections *corrFT0C = new Corrections("corrections_ft0c.txt");
    
-    TString cmdfv0(Form("ls %s*/fv0*.root", sDirName.Data()));
+    TString cmdfv0(Form("ls %s*/fv0digits.root", sDirName.Data()));
     std::vector<TString> fv0Files = dm->GetFileNames(cmdfv0);
 
-    TString cmdft0(Form("ls %s*/ft0*.root", sDirName.Data()));
+    TString cmdft0(Form("ls %s*/ft0digits.root", sDirName.Data()));
     std::vector<TString> ft0Files = dm->GetFileNames(cmdft0);
 
-    TString cmdmc(Form("ls %s*/output_nockov.root", sDirName.Data()));
-    std::vector<TString> mcFiles = dm->GetFileNames(cmdmc);
+    TString cmdmc(Form("ls %s*/o2sim_Kine_nockov.root", sDirName.Data()));
+	std::vector<TString> mcFiles = dm->GetFileNames(cmdmc);
 
-    if (bCalculateCorrections) {
+	if (bCalculateCorrections) {
         TH2D *hQvecfv0 = new TH2D("hQvecfv0", "hQvecfv0", 251, -0.5, 0.5, 251, -0.5, 0.5);
         TH2D *hQvecft0a = new TH2D("hQvecft0a", "hQvecft0a", 251, -0.5, 0.5, 251, -0.5, 0.5);
         TH2D *hQvecft0c = new TH2D("hQvecft0c", "hQvecft0c", 251, -0.5, 0.5, 251, -0.5, 0.5);
@@ -73,9 +73,12 @@ int main(int argc, char **argv) {
    
     // loop over files
     int nfiles = fv0Files.size();
-    //for (int ifile = 0; ifile < nfiles-3; ifile++) {
-    for (int ifile = 0; ifile < 1; ifile++) {
-        Eventplane ep;
+    for (int ifile = 0; ifile < nfiles-3; ifile++) {
+    //for (int ifile = 0; ifile < 1; ifile++) {
+    	
+		std::cout << "File " << ifile+1 << "/" << nfiles-3 << std::endl;    
+	
+		Eventplane ep;
         std::vector<TComplex> QvecAfv0 = ep.GetQvecA("FV0", fv0Files[ifile]);
         std::vector<TComplex> QvecAft0a = ep.GetQvecA("FT0A", ft0Files[ifile]);
         std::vector<TComplex> QvecAft0c = ep.GetQvecA("FT0C", ft0Files[ifile]);
@@ -93,6 +96,8 @@ int main(int argc, char **argv) {
 
             histos->hQvecAfv0->Fill(qx, qy);
             histos->hEPAfv0->Fill(epA);
+            histos->hEPB->Fill(epB);
+            histos->hEPC->Fill(epC);
             histos->hRabFV0->Fill(TMath::Cos(2*(epA - epB)));
             histos->hRacFV0->Fill(TMath::Cos(2*(epA - epC)));
             histos->hRbcFV0->Fill(TMath::Cos(2*(epB - epC)));

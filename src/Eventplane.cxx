@@ -114,7 +114,7 @@ void Eventplane::CalculateQvecFV0(TTree *digitTree, std::vector<TComplex> &QvecC
                 continue;
             }
            
-	    if (prevLabelEvent >= labelEvent) continue;
+	    	if (prevLabelEvent >= labelEvent) continue;
 
             prevLabelEvent = labelEvent;
 
@@ -201,6 +201,7 @@ void Eventplane::CalculateQvecFT0(TTree *digitTree, std::vector<TComplex> &QvecC
             } else {
                 QvecContainer.push_back(TComplex(0, 0));
             }
+
             Qvec = TComplex(0, 0);
             signalSum = 0;
         }
@@ -227,10 +228,10 @@ double Eventplane::GetFV0Phi(int chno)
     const double pi = TMath::Pi();
     int pmtMapSmallCh[8] = {5,4,3,2,6,7,0,1};
     std::map<int, int> pmtMapBigCh = {
-        {46, 0}, {38, 1}, {47, 2}, {39, 3}, {43, 4}, {35, 5}, {42, 6}, {34, 7},
-        {41, 8}, {33, 9}, {40, 10}, {32, 11}, {44, 12}, {36, 13}, {45, 14}, {37, 15}
+        {45, 0}, {37, 1}, {44, 2}, {36, 3}, {43, 4}, {35, 5}, {42, 6}, {34, 7},
+        {41, 8}, {33, 9}, {40, 10}, {32, 11}, {47, 12}, {39, 13}, {46, 14}, {38, 15}
     };
-    
+
     if (chno>31) { // 5th ring has 16 segments
         return pi/16.0 + (pmtMapBigCh[chno])*pi/8.0 - pi;
     } else {
