@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 
     TFile *fOut = TFile::Open(fOutName, "RECREATE");
     
-    Histo *histos = new Histos();
+    Histos *histos = new Histos();
     DataManager *dm = new DataManager();
     Corrections *corrFV0 = new Corrections("corrections_fv0.txt");
     Corrections *corrFT0A = new Corrections("corrections_ft0a.txt");
