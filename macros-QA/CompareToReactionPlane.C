@@ -11,7 +11,7 @@ void CompareToReactionPlane(TString sDirName)
     mcbr->SetAddress(&mctrack);
 
     o2::dataformats::MCEventHeader* mcheader = nullptr;
-    auto hdrbr = kineTree->GetBranch("MCEventHeader");
+    auto hdrbr = kineTree->GetBranch("MCEventHeader.");
     hdrbr->SetAddress(&mcheader);
 
     int nent = kineTree->GetEntries();
@@ -20,10 +20,9 @@ void CompareToReactionPlane(TString sDirName)
         kineTree->GetEntry(ient);
 
         int ntrack = 0;
-        for (auto &t : *mcheader) {
+			
+		double rp = mcheader->GetRotZ();
+		std::cout << rp << std::endl;
 
-            
-
-        }
     }
 }
