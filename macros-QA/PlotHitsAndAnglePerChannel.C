@@ -67,7 +67,7 @@ void PlotHitsAndAnglePerChannel(TString sDirName)
 	for (int ihist = 0; ihist < (int)nfv0ch/2.; ihist++) {
 		c1->cd(ihist+1);
 		hHitsFV0[ihist]->Draw("COL");
-		gAngle[ihist]->Draw("SAME P");
+		gAngle[ihist]->Draw("SAME L");
 	}
 
 	c1->SaveAs("hitmaps1.pdf");
@@ -80,7 +80,7 @@ void PlotHitsAndAnglePerChannel(TString sDirName)
 	for (int ihist = (int)nfv0ch/2.; ihist < nfv0ch; ihist++) {
 		c2->cd(canvas);
 		hHitsFV0[ihist]->Draw("COL");
-		gAngle[ihist]->Draw("SAME P");
+		gAngle[ihist]->Draw("SAME L");
 		canvas++;
 	}
 
