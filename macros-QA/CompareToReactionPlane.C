@@ -1,9 +1,9 @@
 double GetFV0Phi(int chno);
 
-void CompareToReactionPlane(TString sDirName)   
+void CompareToReactionPlane(TString sDirName="")   
 {
-    TString digitfile(Form("%s/fv0digits.root", sDirName.Data()));
-    TString mcfile(Form("%s/o2sim_Kine.root", sDirName.Data()));
+    TString digitfile(Form("%sfv0digits.root", sDirName.Data()));
+    TString mcfile(Form("%so2sim_Kine.root", sDirName.Data()));
 
     TFile *finkine = TFile::Open(mcfile);
     TTree *kineTree = (TTree*)finkine->Get("o2sim");
@@ -30,7 +30,7 @@ void CompareToReactionPlane(TString sDirName)
     digitTree->SetBranchAddress("FV0DigitCh", &chdataPtr);
     digitTree->SetBranchAddress("FV0DigitLabels", &labelsPtr);
 
-    std::vector<double> rp, ep;
+    std::vector<double> rp, ep, amplsum;
 
     int nent = kineTree->GetEntries();
     for (int ient = 0; ient < nent; ient++) {
@@ -79,40 +79,8 @@ void CompareToReactionPlane(TString sDirName)
 			qx /= sum;
 			qy /= sum;
             ep.push_back(TMath::ATan2(qy, qx)/2.0);
-        }
-    }
-
-	for (int ient = 0; ient < nent; ient++) {
-        
-        digitTree->GetEntry(ient);
-
-        int prevLabelEvent = -1;
-        int nbc = bcdata.size();
-        for (int ibc = 0; ibc < nbc; ibc++) {
-            
-            const auto lb = labels.getLabels(ibc+1);
-            int labelEvent = 0;
-            if (lb.size() > 0) {
-                labelEvent = lb[0].getEventID();
-            } else {
-                continue;
-            }
-
-            if (prevLabelEvent >= labelEvent) continue;
-
-            prevLabelEvent = labelEvent;
-
-			if (TMath::Abs(rp[labelEvent] - ep[labelEvent]) < TMath::Pi()) continue;
-
-			std::cout << "\n";
-            const auto &bcd = bcdata[ibc];
-            int chent = bcd.ref.getFirstEntry();
-            for (int ich = 0; ich < bcd.ref.getEntries(); ich++) {
-                const auto &chd = chdata[chent++];
-                double charge = chd.chargeAdc;
-                double channel = chd.pmtNumber;
-				std::cout << "channel : " << channel << "   charge : " << charge << std::endl;
-            }
+            sum /= 1000.;
+            amplsum.push_back(sum);
         }
     }
 
@@ -121,19 +89,28 @@ void CompareToReactionPlane(TString sDirName)
 
     TFile *fout; 
 	TH1D *hDiff;
+	TH2D *hRpVsEp;
+    TH2D *hDiffVsAmplSum;
 
 	bool bFileExists = gSystem->AccessPathName("output.root");
 	if (bFileExists) {
 		fout = TFile::Open("output.root", "NEW");
-    	hDiff = new TH1D("hDiff", "hDiff", 100, 0., 2.*TMath::Pi());
+    	hDiff = new TH1D("hDiff", "hDiff", 301, 0., 2.*TMath::Pi());
+    	hRpVsEp = new TH2D("hRpVsEp", "hRpVsEp", 301, -TMath::Pi(), TMath::Pi(), 301, -TMath::Pi(), TMath::Pi());
+    	hDiffVsAmplSum = new TH2D("hDiffVsFiredAmplSum", "hDiffVsFiredAmplSum", 301, 0., 2.*TMath::Pi(), 301, 0., 300);
 	} else {
 		fout = TFile::Open("output.root", "UPDATE");
 		hDiff = (TH1D*)fout->Get("hDiff");
+		hRpVsEp = (TH2D*)fout->Get("hRpVsEp");
+		hDiffVsAmplSum = (TH2D*)fout->Get("hDiffVsAmplSum");
 	}
     
     for (int i = 0; i < (int)rp.size(); i++) {
         //std::cout << "RP : " << rp[i] << "   EP : " << ep[i] << "   |RP-EP| : " << TMath::Abs(rp[i] - ep[i]) << std::endl;
-        hDiff->Fill(TMath::Abs(rp[i] - ep[i]));
+        double diff = TMath::Abs(rp[i] - ep[i]); 
+        hDiff->Fill(diff);
+        hRpVsEp->Fill(rp[i], ep[i]);
+        hDiffVsAmplSum->Fill(diff, amplsum[i]);
     }
 
     //TCanvas *c1 = new TCanvas("c1", "c1");
