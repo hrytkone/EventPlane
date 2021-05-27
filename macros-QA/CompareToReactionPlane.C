@@ -97,7 +97,7 @@ void CompareToReactionPlane(TString sDirName="")
 		fout = TFile::Open("output.root", "NEW");
     	hDiff = new TH1D("hDiff", "hDiff", 301, 0., 2.*TMath::Pi());
     	hRpVsEp = new TH2D("hRpVsEp", "hRpVsEp", 301, -TMath::Pi(), TMath::Pi(), 301, -TMath::Pi(), TMath::Pi());
-    	hDiffVsAmplSum = new TH2D("hDiffVsFiredAmplSum", "hDiffVsFiredAmplSum", 301, 0., 2.*TMath::Pi(), 301, 0., 300);
+    	hDiffVsAmplSum = new TH2D("hDiffVsAmplSum", "hDiffVsAmplSum", 301, 0., 2.*TMath::Pi(), 301, 0., 300);
 	} else {
 		fout = TFile::Open("output.root", "UPDATE");
 		hDiff = (TH1D*)fout->Get("hDiff");
