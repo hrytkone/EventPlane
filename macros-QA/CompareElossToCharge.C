@@ -91,8 +91,19 @@ void CompareElossToCharge(TString sDirName)
 
     findigits->Close();
 
+    TFile *fout;
+    TH2D *hHitPerCharge;
+
+    bool bOutputExists = gSystem->AccessPathName("hitpercharge.root");
+    if (bOutputExists) {
+        fout = TFile::Open("hitpercharge.root", "NEW");
+        hHitPerCharge = new TH2D("hHitPerCharge", "hHitPerCharge", 40, 0.5, 40.5, 301, 0., 0.002);
+    } else {
+        fout = TFile::Open("hitpercharge.root", "UPDATE");
+        hHitPerCharge = (TH2D*)fout->Get("hHitPerCharge");
+    } 
+
     // Fill hits per charge histogram for each channel
-    TH2D *hHitPerCharge = new TH2D("hHitPerCharge", "hHitPerCharge", 4, 0.5, 40.5, 301, 0., 1000.);
     for (int i = 0; i < (int)vecCharge.size(); i++) {
         for (int j = 0; j < (int)vecCharge[i].size(); j++) {
             double div = vecEloss[i][j]/vecCharge[i][j];
@@ -100,6 +111,11 @@ void CompareElossToCharge(TString sDirName)
         }
     }
 
-    TCanvas *c1 = new TCanvas("c1", "c1");
-    hHitPerCharge->Draw("COLZ");
+    //TCanvas *c1 = new TCanvas("c1", "c1");
+    //hHitPerCharge->Draw("COLZ");
+
+	//c1->SaveAs("hitpercharge.png");
+
+    fout->Write("", TObject::kOverwrite);
+    fout->Close();
 }
