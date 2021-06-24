@@ -14,8 +14,12 @@ int main(int argc, char **argv) {
 
     TString fOutName = argc > 1 ? argv[1] : "eventplane.root";
     TString sDirName = argc > 2 ? argv[2] : "";
-    bool bDoCorrections = argc > 3 ? std::stoi(argv[3]) : 0;
-    bool bCalculateCorrections = argc > 4 ? std::stoi(argv[4]) : 0; // if this is true then only calculate corrections and save them to a file
+    double bmin = argc > 3 ? std::stof(argv[3]) : 0.;
+    double bmax = argc > 4 ? std::stof(argv[4]) : 20.;
+    bool bDoCorrections = argc > 5 ? std::stoi(argv[5]) : 0;
+    bool bCalculateCorrections = argc > 6 ? std::stoi(argv[6]) : 0; // if this is true then only calculate corrections and save them to a file
+
+    std::cout << "Calculating event plane to events between b = [ " << bmin << " " << bmax << " ]" << std::endl;
 
     TStopwatch timer;
     timer.Start();
@@ -24,17 +28,18 @@ int main(int argc, char **argv) {
 
     Histos *histos = new Histos();
     DataManager *dm = new DataManager();
+    Eventplane *ep = new Eventplane(bmin, bmax);
     Corrections *corrFV0 = new Corrections("corrections_fv0.txt");
     Corrections *corrFT0A = new Corrections("corrections_ft0a.txt");
     Corrections *corrFT0C = new Corrections("corrections_ft0c.txt");
    
-    TString cmdfv0(Form("ls %s*/fv0digits.root", sDirName.Data()));
+    TString cmdfv0(Form("ls %s/dig*/*/fv0digits.root", sDirName.Data()));
     std::vector<TString> fv0Files = dm->GetFileNames(cmdfv0);
 
-    TString cmdft0(Form("ls %s*/ft0digits.root", sDirName.Data()));
+    TString cmdft0(Form("ls %s/dig*/*/ft0digits.root", sDirName.Data()));
     std::vector<TString> ft0Files = dm->GetFileNames(cmdft0);
 
-    TString cmdmc(Form("ls %s*/o2sim_Kine_nockov.root", sDirName.Data()));
+    TString cmdmc(Form("ls %s/sim/*/o2sim_Kine_PPOnly.root", sDirName.Data()));
 	std::vector<TString> mcFiles = dm->GetFileNames(cmdmc);
 
 	if (bCalculateCorrections) {
@@ -44,15 +49,18 @@ int main(int argc, char **argv) {
 
         int nfiles = fv0Files.size();
         for (int ifile = 0; ifile < nfiles; ifile++) {
-            Eventplane ep;
-            std::vector<TComplex> QvecAfv0 = ep.GetQvecA("FV0", fv0Files[ifile]);
+            
+            ep->OpenFiles(mcFiles[ifile], fv0Files[ifile], ft0Files[ifile]);
+            
+            std::vector<TComplex> QvecAfv0 = ep->GetQvecA("FV0");
             for (int i = 0; i < (int)QvecAfv0.size(); i++) hQvecfv0->Fill(QvecAfv0[i].Re(), QvecAfv0[i].Im());            
             
-            std::vector<TComplex> QvecAft0a = ep.GetQvecA("FT0A", ft0Files[ifile]);
+            std::vector<TComplex> QvecAft0a = ep->GetQvecA("FT0A");
             for (int i = 0; i < (int)QvecAft0a.size(); i++) hQvecft0a->Fill(QvecAft0a[i].Re(), QvecAft0a[i].Im());            
             
-            std::vector<TComplex> QvecAft0c = ep.GetQvecA("FT0C", ft0Files[ifile]);
-            for (int i = 0; i < (int)QvecAft0c.size(); i++) hQvecft0c->Fill(QvecAft0c[i].Re(), QvecAft0c[i].Im());            
+            std::vector<TComplex> QvecAft0c = ep->GetQvecA("FT0C");
+            for (int i = 0; i < (int)QvecAft0c.size(); i++) hQvecft0c->Fill(QvecAft0c[i].Re(), QvecAft0c[i].Im()); 
+            ep->CloseFiles();
         }
 
         corrFV0->SaveCorrections(hQvecfv0);
@@ -71,18 +79,27 @@ int main(int argc, char **argv) {
         corrFT0C->Print();
     }
    
+    
     // loop over files
     int nfiles = fv0Files.size();
-    for (int ifile = 0; ifile < nfiles-3; ifile++) {
-    //for (int ifile = 0; ifile < 1; ifile++) {
+    //for (int ifile = 0; ifile < nfiles; ifile++) {
+    for (int ifile = 1; ifile < 2; ifile++) {
     	
-		std::cout << "File " << ifile+1 << "/" << nfiles-3 << std::endl;    
+		std::cout << "\nFiles " << ifile+1 << "/" << nfiles << std::endl;
+        std::cout << "\t" << mcFiles[ifile] << std::endl;
+        std::cout << "\t" << fv0Files[ifile] << std::endl;
+        std::cout << "\t" << ft0Files[ifile] << std::endl;
 	
-		Eventplane ep;
-        std::vector<TComplex> QvecAfv0 = ep.GetQvecA("FV0", fv0Files[ifile]);
-        std::vector<TComplex> QvecAft0a = ep.GetQvecA("FT0A", ft0Files[ifile]);
-        std::vector<TComplex> QvecAft0c = ep.GetQvecA("FT0C", ft0Files[ifile]);
-        std::vector<std::vector<TComplex>> QvecBC = ep.GetQvecBC(mcFiles[ifile]);
+        int filesOpen = ep->OpenFiles(mcFiles[ifile], fv0Files[ifile], ft0Files[ifile]);
+        if (!filesOpen) continue;
+
+        std::vector<TComplex> QvecAfv0 = ep->GetQvecA("FV0");
+        std::vector<TComplex> QvecAft0a = ep->GetQvecA("FT0A");
+        std::vector<TComplex> QvecAft0c = ep->GetQvecA("FT0C");
+        std::vector<std::vector<TComplex>> QvecBC = ep->GetQvecBC();
+
+        std::cout << QvecAfv0.size() << "  " << QvecAft0a.size() << "  " << QvecBC.size()<< "  " << std::endl;
+        continue;
 
         int nev = QvecAfv0.size();
         for (int iev = 0; iev < nev; iev++) {
@@ -90,9 +107,9 @@ int main(int argc, char **argv) {
             
             if (bDoCorrections) corrFV0->DoCorrections(qx, qy);
             
-            double epA = ep.GetEventPlane(TComplex(qx, qy));
-            double epB = ep.GetEventPlane(QvecBC[iev][0]);
-            double epC = ep.GetEventPlane(QvecBC[iev][1]);
+            double epA = ep->GetEventPlane(TComplex(qx, qy));
+            double epB = ep->GetEventPlane(QvecBC[iev][0]);
+            double epC = ep->GetEventPlane(QvecBC[iev][1]);
 
             histos->hQvecAfv0->Fill(qx, qy);
             histos->hEPAfv0->Fill(epA);
@@ -109,9 +126,9 @@ int main(int argc, char **argv) {
             
             if (bDoCorrections) corrFT0A->DoCorrections(qx, qy);
             
-            double epA = ep.GetEventPlane(TComplex(qx, qy));
-            double epB = ep.GetEventPlane(QvecBC[iev][0]);
-            double epC = ep.GetEventPlane(QvecBC[iev][1]);
+            double epA = ep->GetEventPlane(TComplex(qx, qy));
+            double epB = ep->GetEventPlane(QvecBC[iev][0]);
+            double epC = ep->GetEventPlane(QvecBC[iev][1]);
             
             histos->hQvecAft0a->Fill(qx, qy);
             histos->hEPAft0a->Fill(epA);
@@ -126,9 +143,9 @@ int main(int argc, char **argv) {
             
             if (bDoCorrections) corrFT0C->DoCorrections(qx, qy);
             
-            double epA = ep.GetEventPlane(TComplex(qx, qy));
-            double epB = ep.GetEventPlane(QvecBC[iev][0]);
-            double epC = ep.GetEventPlane(QvecBC[iev][1]); 
+            double epA = ep->GetEventPlane(TComplex(qx, qy));
+            double epB = ep->GetEventPlane(QvecBC[iev][0]);
+            double epC = ep->GetEventPlane(QvecBC[iev][1]); 
             
             histos->hQvecAft0c->Fill(qx, qy);
             histos->hEPAft0c->Fill(epA);
@@ -136,6 +153,9 @@ int main(int argc, char **argv) {
             histos->hRacFT0C->Fill(TMath::Cos(2*(epA - epC)));
             histos->hRbcFT0C->Fill(TMath::Cos(2*(epB - epC)));
         }
+
+        ep->CloseFiles();
+        
     }
     
     fOut->Write("", TObject::kOverwrite);

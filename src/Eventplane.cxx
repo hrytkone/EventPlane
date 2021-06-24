@@ -2,45 +2,82 @@
 
 Eventplane::Eventplane()
 {
+    fBmin = 0.;
+    fBmax = 20.;
 }
 
-std::vector<TComplex> Eventplane::GetQvecA(TString det, TString sInFile)
+Eventplane::Eventplane(double bmin, double bmax)
 {
-    TFile *fIn = TFile::Open(sInFile);
-    TTree *digitTree = (TTree*)fIn->Get("o2sim");
+    fBmin = bmin;
+    fBmax = bmax;
+}
 
+int Eventplane::OpenFiles(TString nameKineFile, TString nameFV0DigitFile, TString nameFT0DigitFile)
+{
+    fInKine = TFile::Open(nameKineFile, "READ");
+    fInFV0Digit = TFile::Open(nameFV0DigitFile, "READ");
+    fInFT0Digit = TFile::Open(nameFT0DigitFile, "READ");
+
+    if (!fInKine || !fInFV0Digit || !fInFT0Digit) {
+        std::cout << "Could not open the files, skipping them.." << std::endl;
+        return 0;
+    }
+
+    fKineTree = (TTree*)fInKine->Get("o2sim");
+    fFV0DigitTree = (TTree*)fInFV0Digit->Get("o2sim");
+    fFT0DigitTree = (TTree*)fInFT0Digit->Get("o2sim");
+
+    mcheader = nullptr;
+    hdrbr = fKineTree->GetBranch("MCEventHeader.");
+    hdrbr->SetAddress(&mcheader);
+
+    return 1;
+}
+
+void Eventplane::CloseFiles()
+{
+    fInKine->Close();
+    fInFV0Digit->Close();
+    fInFT0Digit->Close();
+}
+
+std::vector<TComplex> Eventplane::GetQvecA(TString det)
+{
     std::vector<TComplex> QvecContainer;
     if (det == "FV0") { 
-        CalculateQvecFV0(digitTree, QvecContainer);
+        CalculateQvecFV0(QvecContainer);
     } else if (det == "FT0A" || det == "FT0C") {
-        CalculateQvecFT0(digitTree, QvecContainer, det);
+        CalculateQvecFT0(QvecContainer, det);
     } else {
         std::cout << "Eventplane::GetQvecA : No detector specified!" << std::endl;
         return QvecContainer;
     }
   
-    fIn->Close();
-
     return QvecContainer;
 }
 
-std::vector<std::vector<TComplex>> Eventplane::GetQvecBC(TString sInFile)
+std::vector<std::vector<TComplex>> Eventplane::GetQvecBC()
 {
-    TFile *fIn = TFile::Open(sInFile);
-    TTree* kineTree = (TTree*)fIn->Get("o2sim");
-
-    std::vector<o2::MCTrack>* mctrack = nullptr;
-    auto mcbr = kineTree->GetBranch("MCTrack");
-    mcbr->SetAddress(&mctrack);
-
     std::vector<std::vector<TComplex>> QvecCont;
     TComplex QvecB(0), QvecC(0);
 
-    UInt_t nEntries = kineTree->GetEntries();
+    std::vector<o2::MCTrack>* mctrack = nullptr;
+    auto mcbr = fKineTree->GetBranch("MCTrack");
+    mcbr->SetAddress(&mctrack);
+
+    UInt_t nEntries = fKineTree->GetEntries();
     for (UInt_t ient = 0; ient < nEntries; ient++) {
 
+        //fKineTree->GetEntry(ient);
+        std::cout << "\ntoimii 1" << std::endl;
         mcbr->GetEntry(ient);
-
+        std::cout << "toimii 2" << std::endl;
+        hdrbr->GetEntry(ient);
+        std::cout << "toimii 3" << std::endl;
+        
+        double b = mcheader->GetB();
+        std::cout << "Event " << ient << "  b : " << b << std::endl;
+        if (fBmin > b || fBmax < b) continue;
         int nTracksB = 0, nTracksC = 0;
         for (auto &t : *mctrack) {
 
@@ -48,6 +85,7 @@ std::vector<std::vector<TComplex>> Eventplane::GetQvecBC(TString sInFile)
 
             Int_t pid = t.GetPdgCode();
             if (TMath::Abs(pid)>1000000000) continue;
+            if (TDatabasePDG::Instance()->GetParticle(pid)==NULL) continue;
             Double_t charge = TDatabasePDG::Instance()->GetParticle(pid)->Charge();
             if (charge==0.0) continue;
             double len = TMath::Sqrt(t.Vx()*t.Vx() + t.Vy()*t.Vy() + t.Vz()*t.Vz());
@@ -79,33 +117,33 @@ std::vector<std::vector<TComplex>> Eventplane::GetQvecBC(TString sInFile)
         QvecC = TComplex(0, 0);
     }
 
-    fIn->Close();
+    //fKineTree->ResetBranchAddress(hdrbr);
 
     return QvecCont;
 }
 
-void Eventplane::CalculateQvecFV0(TTree *digitTree, std::vector<TComplex> &QvecContainer)
+void Eventplane::CalculateQvecFV0(std::vector<TComplex> &QvecContainer)
 {
     std::vector<o2::fv0::BCData> bcdata, *bcdataPtr = &bcdata;
     std::vector<o2::fv0::ChannelData> chdata, *chdataPtr = &chdata;
     o2::dataformats::MCTruthContainer<o2::fv0::MCLabel> labels, *labelsPtr = &labels;
 
-    digitTree->SetBranchAddress("FV0DigitBC", &bcdataPtr);
-    digitTree->SetBranchAddress("FV0DigitCh", &chdataPtr);
-    digitTree->SetBranchAddress("FV0DigitLabels", &labelsPtr);
-
+    fFV0DigitTree->SetBranchAddress("FV0DigitBC", &bcdataPtr);
+    fFV0DigitTree->SetBranchAddress("FV0DigitCh", &chdataPtr);
+    fFV0DigitTree->SetBranchAddress("FV0DigitLabels", &labelsPtr);
+    
     TComplex Qvec(0);
-    int nEntries = digitTree->GetEntries();
+    int nEntries = fFV0DigitTree->GetEntries();
     for (int ient = 0; ient < nEntries; ient++) {
         
-        digitTree->GetEntry(ient);
+        fFV0DigitTree->GetEntry(ient);
 
         double signalSum = 0;
         int prevLabelEvent = -1;
         int nbc = bcdata.size();
         for (int ibc = 0; ibc < nbc; ibc++) {
             
-            const auto lb = labels.getLabels(ibc+1);
+            const auto lb = labels.getLabels(ibc);
             int labelEvent = 0;
             if (lb.size() > 0) {
                 labelEvent = lb[0].getEventID();
@@ -117,6 +155,11 @@ void Eventplane::CalculateQvecFV0(TTree *digitTree, std::vector<TComplex> &QvecC
 	    	if (prevLabelEvent >= labelEvent) continue;
 
             prevLabelEvent = labelEvent;
+            
+            fKineTree->GetEntry(labelEvent);
+
+            double b = mcheader->GetB();
+            if (fBmin > b || fBmax < b) continue;
 
             double charge;
             int channel;
@@ -142,23 +185,25 @@ void Eventplane::CalculateQvecFV0(TTree *digitTree, std::vector<TComplex> &QvecC
             
         }
     }
+
+    //fKineTree->ResetBranchAddress(hdrbr);
 }
 
-void Eventplane::CalculateQvecFT0(TTree *digitTree, std::vector<TComplex> &QvecContainer, TString det)
+void Eventplane::CalculateQvecFT0(std::vector<TComplex> &QvecContainer, TString det)
 {
     std::vector<o2::ft0::Digit> bcdata, *bcdataPtr = &bcdata;
     std::vector<o2::ft0::ChannelData> chdata, *chdataPtr = &chdata;
     o2::dataformats::MCTruthContainer<o2::ft0::MCLabel> labels, *labelsPtr = &labels;
 
-    digitTree->SetBranchAddress("FT0DIGITSBC", &bcdataPtr);
-    digitTree->SetBranchAddress("FT0DIGITSCH", &chdataPtr);
-    digitTree->SetBranchAddress("FT0DIGITSMCTR", &labelsPtr);
-
+    fFT0DigitTree->SetBranchAddress("FT0DIGITSBC", &bcdataPtr);
+    fFT0DigitTree->SetBranchAddress("FT0DIGITSCH", &chdataPtr);
+    fFT0DigitTree->SetBranchAddress("FT0DIGITSMCTR", &labelsPtr);
+    
     TComplex Qvec(0);
-    int nEntries = digitTree->GetEntries();
+    int nEntries = fFT0DigitTree->GetEntries();
     for (int ient = 0; ient < nEntries; ient++) {
         
-        digitTree->GetEntry(ient);
+        fFT0DigitTree->GetEntry(ient);
 
         double signalSum = 0;
         int prevLabelEvent = -1;
@@ -176,6 +221,10 @@ void Eventplane::CalculateQvecFT0(TTree *digitTree, std::vector<TComplex> &QvecC
             
             if (labelEvent == prevLabelEvent) continue;
             prevLabelEvent = labelEvent;
+            
+            fKineTree->GetEntry(labelEvent);
+            double b = mcheader->GetB();
+            if (fBmin > b || fBmax < b) continue;
             
             double charge;
             int channel;
@@ -206,6 +255,8 @@ void Eventplane::CalculateQvecFT0(TTree *digitTree, std::vector<TComplex> &QvecC
             signalSum = 0;
         }
     }
+
+    //fKineTree->ResetBranchAddress(hdrbr);
 }
 
 void Eventplane::SumQvec(TComplex &Qvec, double nch, int chno, TString det)

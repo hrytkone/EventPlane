@@ -1,0 +1,43 @@
+Event plane analysis
+Start time : Thu Jun 24 12:43:21 EEST 2021
+Calculating event plane to events between b = [ 0 3.5 ]
+
+Files 1/99
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/sim/run_job100/o2sim_Kine_nockov.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job100/fv0digits.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job100/ft0digits.root
+
+Files 2/99
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/sim/run_job10/o2sim_Kine_nockov.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job10/fv0digits.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job10/ft0digits.root
+
+Files 3/99
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/sim/run_job11/o2sim_Kine_nockov.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job11/fv0digits.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job11/ft0digits.root
+
+Files 4/99
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/sim/run_job12/o2sim_Kine_nockov.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job12/fv0digits.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job12/ft0digits.root
+
+Files 5/99
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/sim/run_job13/o2sim_Kine_nockov.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job13/fv0digits.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job13/ft0digits.root
+
+Files 6/99
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/sim/run_job14/o2sim_Kine_nockov.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job14/fv0digits.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job14/ft0digits.root
+
+Files 7/99
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/sim/run_job15/o2sim_Kine_nockov.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job15/fv0digits.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job15/ft0digits.root
+
+Files 8/99
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/sim/run_job16/o2sim_Kine_nockov.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job16/fv0digits.root
+	/scratch/project_2003583/simO2_outputs/PbPb_o2ver-21-06-10_MBPythia8hi/dig_5Hz-default/run_job16/ft0digits.root

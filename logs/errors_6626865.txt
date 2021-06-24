@@ -1,0 +1,33 @@
+WARNING: not updating modulefiles
+
+ *** Break *** segmentation violation
+
+
+
+===========================================================
+There was a crash.
+This is the entire stack trace of all threads:
+===========================================================
+#0  0x00007f6ed0c284fc in waitpid () from /lib64/libc.so.6
+#1  0x00007f6ed0ba5f62 in do_system () from /lib64/libc.so.6
+#2  0x00007f6ed2c7bdbc in TUnixSystem::Exec (shellcmd=<optimized out>, this=0x2400800) at /alicesw/sw/SOURCES/ROOT/v6-20-08-alice1/v6-20-08-alice1/core/unix/src/TUnixSystem.cxx:2107
+#3  TUnixSystem::StackTrace (this=0x2400800) at /alicesw/sw/SOURCES/ROOT/v6-20-08-alice1/v6-20-08-alice1/core/unix/src/TUnixSystem.cxx:2397
+#4  0x00007f6ed2c792ec in TUnixSystem::DispatchSignals (this=0x2400800, sig=kSigSegmentationViolation) at /alicesw/sw/SOURCES/ROOT/v6-20-08-alice1/v6-20-08-alice1/core/unix/src/TUnixSystem.cxx:3628
+#5  <signal handler called>
+#6  0x0000000000419f4c in std::vector<TComplex, std::allocator<TComplex> >::operator[] (this=0x0, __n=0) at /alicesw/sw/slc7_x86-64/GCC-Toolchain/v10.2.0-alice2-local1/include/c++/10.2.0/bits/stl_vector.h:1046
+#7  0x0000000000418794 in main (argc=5, argv=0x7ffcf5e794b8) at eventplane.cc:108
+===========================================================
+
+
+The lines below might hint at the cause of the crash.
+You may get help by asking at the ROOT forum http://root.cern.ch/forum
+Only if you are really convinced it is a bug in ROOT then please submit a
+report at http://root.cern.ch/bugs Please post the ENTIRE stack trace
+from above as an attachment in addition to anything else
+that might help us fixing this issue.
+===========================================================
+#6  0x0000000000419f4c in std::vector<TComplex, std::allocator<TComplex> >::operator[] (this=0x0, __n=0) at /alicesw/sw/slc7_x86-64/GCC-Toolchain/v10.2.0-alice2-local1/include/c++/10.2.0/bits/stl_vector.h:1046
+#7  0x0000000000418794 in main (argc=5, argv=0x7ffcf5e794b8) at eventplane.cc:108
+===========================================================
+
+
