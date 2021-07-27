@@ -27,10 +27,6 @@ int Eventplane::OpenFiles(TString nameKineFile, TString nameFV0DigitFile, TStrin
     fFV0DigitTree = (TTree*)fInFV0Digit->Get("o2sim");
     fFT0DigitTree = (TTree*)fInFT0Digit->Get("o2sim");
 
-    mcheader = nullptr;
-    hdrbr = fKineTree->GetBranch("MCEventHeader.");
-    hdrbr->SetAddress(&mcheader);
-
     return 1;
 }
 
@@ -44,6 +40,7 @@ void Eventplane::CloseFiles()
 std::vector<TComplex> Eventplane::GetQvecA(TString det)
 {
     std::vector<TComplex> QvecContainer;
+    std::cout << "\nQvec A : " << std::endl;
     if (det == "FV0") { 
         CalculateQvecFV0(QvecContainer);
     } else if (det == "FT0A" || det == "FT0C") {
@@ -65,19 +62,20 @@ std::vector<std::vector<TComplex>> Eventplane::GetQvecBC()
     auto mcbr = fKineTree->GetBranch("MCTrack");
     mcbr->SetAddress(&mctrack);
 
+    o2::dataformats::MCEventHeader* mcheader = nullptr;
+    auto hdrbr = fKineTree->GetBranch("MCEventHeader.");
+    hdrbr->SetAddress(&mcheader);
+
+    int iqvec = 0;
     UInt_t nEntries = fKineTree->GetEntries();
+    std::cout << "\nQvec B and C : " << std::endl;
     for (UInt_t ient = 0; ient < nEntries; ient++) {
 
-        //fKineTree->GetEntry(ient);
-        std::cout << "\ntoimii 1" << std::endl;
-        mcbr->GetEntry(ient);
-        std::cout << "toimii 2" << std::endl;
-        hdrbr->GetEntry(ient);
-        std::cout << "toimii 3" << std::endl;
+        fKineTree->GetEntry(ient);
         
         double b = mcheader->GetB();
-        std::cout << "Event " << ient << "  b : " << b << std::endl;
-        if (fBmin > b || fBmax < b) continue;
+        std::cout << "\tEvent " << ient << "  b : " << b << std::endl;
+        if (b < fBmin || b > fBmax) continue;
         int nTracksB = 0, nTracksC = 0;
         for (auto &t : *mctrack) {
 
@@ -110,15 +108,19 @@ std::vector<std::vector<TComplex>> Eventplane::GetQvecBC()
         QvecC /= (double)nTracksC;
 
         QvecCont.push_back(std::vector<TComplex>());
-        QvecCont[ient].push_back(QvecB);
-        QvecCont[ient].push_back(QvecC);
+        QvecCont[iqvec].push_back(QvecB);
+        QvecCont[iqvec++].push_back(QvecC);
+        std::cout << "\t\t --> event kept" << std::endl;
 
         QvecB = TComplex(0, 0);
         QvecC = TComplex(0, 0);
     }
+ 
+    fKineTree->ResetBranchAddresses();
 
-    //fKineTree->ResetBranchAddress(hdrbr);
-
+    delete mctrack;
+    delete mcheader;
+   
     return QvecCont;
 }
 
@@ -131,7 +133,11 @@ void Eventplane::CalculateQvecFV0(std::vector<TComplex> &QvecContainer)
     fFV0DigitTree->SetBranchAddress("FV0DigitBC", &bcdataPtr);
     fFV0DigitTree->SetBranchAddress("FV0DigitCh", &chdataPtr);
     fFV0DigitTree->SetBranchAddress("FV0DigitLabels", &labelsPtr);
-    
+ 
+    o2::dataformats::MCEventHeader* mcheader = nullptr;
+    auto hdrbr = fKineTree->GetBranch("MCEventHeader.");
+    hdrbr->SetAddress(&mcheader);
+   
     TComplex Qvec(0);
     int nEntries = fFV0DigitTree->GetEntries();
     for (int ient = 0; ient < nEntries; ient++) {
@@ -154,11 +160,24 @@ void Eventplane::CalculateQvecFV0(std::vector<TComplex> &QvecContainer)
            
 	    	if (prevLabelEvent >= labelEvent) continue;
 
+            // Add empty vector if there is a gap in event numbers
+            if (labelEvent - prevLabelEvent > 1) {
+                int ievmiss = labelEvent - 1;
+                fKineTree->GetEntry(ievmiss);
+                double b = mcheader->GetB();
+                std::cout << "\tEvent " << ievmiss << "  b : " << b << std::endl;
+                if (fBmin < b && fBmax > b) {
+                    std::cout << "Event " << ievmiss << " missing, add empty vector" << std::endl;
+                    QvecContainer.push_back(TComplex(0, 0));
+                }
+            }
+
             prevLabelEvent = labelEvent;
             
             fKineTree->GetEntry(labelEvent);
 
             double b = mcheader->GetB();
+            std::cout << "\tEvent " << labelEvent << "  b : " << b << std::endl;
             if (fBmin > b || fBmax < b) continue;
 
             double charge;
@@ -179,6 +198,7 @@ void Eventplane::CalculateQvecFV0(std::vector<TComplex> &QvecContainer)
             } else {
                 QvecContainer.push_back(TComplex(0, 0));
             }
+            std::cout << "\t\t --> event kept" << std::endl;
 
             Qvec = TComplex(0, 0);
             signalSum = 0;
@@ -186,7 +206,13 @@ void Eventplane::CalculateQvecFV0(std::vector<TComplex> &QvecContainer)
         }
     }
 
-    //fKineTree->ResetBranchAddress(hdrbr);
+    fKineTree->ResetBranchAddresses();
+    fFV0DigitTree->ResetBranchAddresses();
+
+    delete bcdataPtr;
+    delete chdataPtr;
+    delete labelsPtr;
+    delete mcheader;
 }
 
 void Eventplane::CalculateQvecFT0(std::vector<TComplex> &QvecContainer, TString det)
@@ -198,7 +224,11 @@ void Eventplane::CalculateQvecFT0(std::vector<TComplex> &QvecContainer, TString 
     fFT0DigitTree->SetBranchAddress("FT0DIGITSBC", &bcdataPtr);
     fFT0DigitTree->SetBranchAddress("FT0DIGITSCH", &chdataPtr);
     fFT0DigitTree->SetBranchAddress("FT0DIGITSMCTR", &labelsPtr);
-    
+ 
+    o2::dataformats::MCEventHeader* mcheader = nullptr;
+    auto hdrbr = fKineTree->GetBranch("MCEventHeader.");
+    hdrbr->SetAddress(&mcheader);
+   
     TComplex Qvec(0);
     int nEntries = fFT0DigitTree->GetEntries();
     for (int ient = 0; ient < nEntries; ient++) {
@@ -220,12 +250,27 @@ void Eventplane::CalculateQvecFT0(std::vector<TComplex> &QvecContainer, TString 
             }
             
             if (labelEvent == prevLabelEvent) continue;
+
+            // Add empty vector if there is a gap in event numbers
+            if (labelEvent - prevLabelEvent > 1) {
+                int ievmiss = labelEvent - 1;
+                fKineTree->GetEntry(ievmiss);
+                double b = mcheader->GetB();
+                std::cout << "\tEvent " << ievmiss << "  b : " << b << std::endl;
+                if (fBmin < b && fBmax > b) {
+                    std::cout << "Event " << ievmiss << " missing, add empty vector" << std::endl;
+                    QvecContainer.push_back(TComplex(0, 0));
+                }
+            }
+
             prevLabelEvent = labelEvent;
             
             fKineTree->GetEntry(labelEvent);
-            double b = mcheader->GetB();
-            if (fBmin > b || fBmax < b) continue;
             
+            double b = mcheader->GetB();
+            std::cout << "\tEvent " << labelEvent << "  b : " << b << std::endl;
+            if (fBmin > b || fBmax < b) continue;
+
             double charge;
             int channel;
             const auto &bcd = bcdata[ibc];
@@ -250,13 +295,20 @@ void Eventplane::CalculateQvecFT0(std::vector<TComplex> &QvecContainer, TString 
             } else {
                 QvecContainer.push_back(TComplex(0, 0));
             }
+            std::cout << "\t\t --> event kept" << std::endl;
 
             Qvec = TComplex(0, 0);
             signalSum = 0;
         }
     }
 
-    //fKineTree->ResetBranchAddress(hdrbr);
+    fKineTree->ResetBranchAddresses();
+    fFT0DigitTree->ResetBranchAddresses();
+
+    delete bcdataPtr;
+    delete chdataPtr;
+    delete labelsPtr;
+    delete mcheader;
 }
 
 void Eventplane::SumQvec(TComplex &Qvec, double nch, int chno, TString det)

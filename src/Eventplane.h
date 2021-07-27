@@ -8,6 +8,7 @@
 #include "TComplex.h"
 #include "TFile.h"
 #include "TTree.h"
+#include "TBranch.h"
 
 #include <DataFormatsFV0/BCData.h>
 #include <DataFormatsFV0/ChannelData.h>
@@ -56,9 +57,6 @@ private:
     TTree *fKineTree; 
     TTree *fFV0DigitTree; 
     TTree *fFT0DigitTree; 
-
-    o2::dataformats::MCEventHeader *mcheader;
-    TBranch *hdrbr;
 };
 
 #endif

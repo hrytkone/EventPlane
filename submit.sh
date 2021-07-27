@@ -2,7 +2,7 @@
 ## sbatch usage: sbatch submit.sh <comment> <inputdir> <bmin> <bmax>
 ## sbatch will check arguments from the comments in the
 ## beginning of this file.
-#SBATCH --job-name=focal
+#SBATCH --job-name=ep-pythia
 #SBATCH --account=project_2003583
 # partition explained here: https://docs.csc.fi/computing/running/batch-job-partitions/
 # test = 15min, 80tasks,   2node,  382GiB max memory, 3600GiB max storage
@@ -13,7 +13,7 @@
 #SBATCH --ntasks=1
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem-per-cpu=4000
+#SBATCH --mem-per-cpu=2000
 #SBATCH --mail-type=END #uncomment to enable mail
 #SBATCH --array=1-1 #defines SLURM_ARRAY_TASK_ID
 #SBATCH --output=logs/output_%j.txt

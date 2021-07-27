@@ -9,7 +9,7 @@ INCLUDE=-I$(O2_ROOT)/include/GPU -I$(O2_ROOT)/include/SimulationDataFormat -I$(M
 
 SOFLAGS=-shared
 
-HEADERS=src/Histos.h \
+#HEADERS=src/Histos.h \
 		src/DataManager.h \
 		src/Corrections.h \
 		src/Eventplane.h
