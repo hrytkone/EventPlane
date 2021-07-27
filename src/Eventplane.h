@@ -56,7 +56,9 @@ private:
 
     TTree *fKineTree; 
     TTree *fFV0DigitTree; 
-    TTree *fFT0DigitTree; 
+    TTree *fFT0DigitTree;
+
+    ClassDef (Eventplane ,1);
 };
 
 #endif
