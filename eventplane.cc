@@ -14,15 +14,16 @@
 int main(int argc, char **argv) {
 
     TString fOutName = argc > 1 ? argv[1] : "eventplane.root";
-    TString sDirName = argc > 2 ? argv[2] : "";
-    double bmin = argc > 3 ? std::stof(argv[3]) : 0.;
-    double bmax = argc > 4 ? std::stof(argv[4]) : 20.;
-    bool bDoCorrections = argc > 5 ? std::stoi(argv[5]) : 0;
-    bool bCalculateCorrections = argc > 6 ? std::stoi(argv[6]) : 0; // if this is true then only calculate corrections and save them to a file
+    TString sKineFile = argc > 2 ? argv[2] : "";
+    TString sFV0File = argc > 3 ? argv[3] : "";
+    TString sFT0File = argc > 4 ? argv[4] : "";
+    double bmin = argc > 5 ? std::stof(argv[5]) : 0.;
+    double bmax = argc > 6 ? std::stof(argv[6]) : 20.;
+    bool bDoCorrections = argc > 7 ? std::stoi(argv[7]) : 0;
 
-    TFile *fOut = TFile::Open(fOutName, "RECREATE");
+    TFile *fOut;
 
-    Histos *histos = new Histos();
+    Histos *histos = new Histos(fOutName, fOut); // This opents the output file
     DataManager *dm = new DataManager();
     Eventplane *ep = new Eventplane(bmin, bmax);
     Corrections *corrFV0 = new Corrections("corrections_fv0.txt");
@@ -40,7 +41,7 @@ int main(int argc, char **argv) {
    
     std::cout << "Calculating event plane to events between b = [ " << bmin << " " << bmax << " ]" << std::endl;
     
-    int filesOpen = ep->OpenFiles(mcFiles, fv0Files, ft0Files);
+    int filesOpen = ep->OpenFiles(sKineFile, sFV0File, sFT0File);
     if (!filesOpen) continue;
 
     std::vector<TComplex> QvecAfv0 = ep->GetQvecA("FV0");

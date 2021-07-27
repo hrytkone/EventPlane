@@ -3,6 +3,7 @@
 echo "Event plane analysis"
 time=$(date)
 echo "Start time : $time"
+echo "Analysis done for impact parameter values betwee [${3}, ${4}]"
 
 export seed=1000
 jobid=$SLURM_ARRAY_TASK_ID
@@ -13,7 +14,7 @@ export SINGULARITY_BIND="/projappl/project_2003583,/scratch/project_2003583,$TMP
 export SINGULARITY_SHELL="/bin/bash --norc"
 export SINGULARITY_CACHEDIR=$TMPDIR
 
-singularity exec --home $HOME --workdir $TMPDIR /projappl/project_2003583/alidockSingularity_21-06-10.sif alienv setenv O2/latest-dev-o2 -c ./eventplane ${1}.root ${2} ${3} ${4} 
+singularity exec --home $HOME --workdir $TMPDIR /projappl/project_2003583/alidockSingularity_21-06-10.sif alienv setenv O2/latest-dev-o2 -c ./runAnalysis ${1} ${2} ${3} ${4} ${5}
 
 time=$(date)
 

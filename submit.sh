@@ -1,5 +1,5 @@
 #!/bin/bash
-## sbatch usage: sbatch submit.sh <comment> <inputdir> <bmin> <bmax>
+## sbatch usage: sbatch submit.sh <outputfile> <kinefile> <fv0digitfile> <ft0digitfile> <bmin> <bmax> <bDoCorrections>
 ## sbatch will check arguments from the comments in the
 ## beginning of this file.
 #SBATCH --job-name=ep-pythia
@@ -21,13 +21,13 @@
 
 if [ "$1" == "help" ]
 then
-    echo "Usage: `basename $0` comment nEvts"
+    echo "Usage: `basename $0` outputdir kinefile fv0digitfile ft0digitfile bmin bmax bDoCorrections"
     exit 0
 fi
 
 if [ -z "$1" ]
 then
-    echo "Please give a comment to make this run unique (check '`basename $0` help' for help)"
+    echo "Please give output file name (check '`basename $0` help' for help)"
     exit 0
 fi
 
@@ -37,23 +37,9 @@ then
     exit 0
 fi
 
-if [ -z "$3" ]
-then
-    echo "Please give bmin"
-    exit 0
-fi
-
-if [ -z "$4" ]
-then
-    echo "Please give bmax"
-    exit 0
-fi
-
 outputname=$1
-inputdir=$2
-bmin=$3
-bmax=$4
+indir=$2
 
 date=$(date '+%Y-%m-%d')
-/users/heimarry/EventPlane/run $outputname $inputdir $bmin $bmax
+/users/heimarry/EventPlane/run $outputname $indir ${3} ${4} ${5}
 sleep 1

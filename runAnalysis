@@ -2,24 +2,34 @@
 
 outfile=${1}
 indir=${2}
+bmin=${3}
+bmax=${4}
+docorr=${5}
 
 declare -a kinefiles
-for file in ${indir}/*/galice.root
+for file in ${indir}/sim/*/o2sim_Kine_PPOnly.root
 do
-    kinefiles=(${kinefiles[@]} "$file")
-done 
+	kinefiles=(${kinefiles[@]} "$file")
+done
 
-declare -a clustfiles
-for file in ${indir}/results_cluster/*.root
+declare -a fv0digitfiles
+for file in ${indir}/dig*/*/fv0digits.root
 do
-    clustfiles=(${clustfiles[@]} "$file")
-done 
+	fv0digitfiles=(${fv0digitfiles[@]} "$file")
+done
+
+declare -a ft0digitfiles
+for file in ${indir}/dig*/*/ft0digits.root
+do
+	ft0digitfiles=(${ft0digitfiles[@]} "$file")
+done
 
 nfiles=${#kinefiles[@]}
 
 for (( i=0; i<$nfiles; i++ ))
 #for (( i=0; i<1; i++ ))
 do
-    cmd="root -b -q 'RunAnalysis.C(\"${kinefiles[i]}\", \"${clustfiles[i]}\", \"${outfile}\")'"
+    cmd="./eventplane.cc ${outfile} ${kinefiles[i]} ${fv0digitfiles[i]} ${ft0digitfiles[i]} ${bmin} ${bmax} ${docorr}"
+    echo $cmd
     eval $cmd
 done

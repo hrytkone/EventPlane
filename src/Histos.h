@@ -3,12 +3,13 @@
 
 #include "TH1D.h"
 #include "TH2D.h"
+#include "TFile.h"
 
 class Histos {
 
 public:
 
-    Histos();
+    Histos(TString oufile, TFile *fout);
     virtual ~Histos() {;}
 
     // Q-vectors 
