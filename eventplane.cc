@@ -29,44 +29,6 @@ int main(int argc, char **argv) {
     Corrections *corrFT0A = new Corrections("corrections_ft0a.txt");
     Corrections *corrFT0C = new Corrections("corrections_ft0c.txt");
     
-	if (bCalculateCorrections) {
-        TH2D *hQvecfv0 = new TH2D("hQvecfv0", "hQvecfv0", 251, -0.5, 0.5, 251, -0.5, 0.5);
-        TH2D *hQvecft0a = new TH2D("hQvecft0a", "hQvecft0a", 251, -0.5, 0.5, 251, -0.5, 0.5);
-        TH2D *hQvecft0c = new TH2D("hQvecft0c", "hQvecft0c", 251, -0.5, 0.5, 251, -0.5, 0.5);
-
-        int nfiles = fv0Files.size();
-        for (int ifile = 0; ifile < nfiles; ifile++) {
-            TString cmdfv0(Form("ls %s/dig*/*/fv0digits.root", sDirName.Data()));
-            std::vector<TString> fv0Files = dm->GetFileNames(cmdfv0);
-
-            TString cmdft0(Form("ls %s/dig*/*/ft0digits.root", sDirName.Data()));
-            std::vector<TString> ft0Files = dm->GetFileNames(cmdft0);
-
-            TString cmdmc(Form("ls %s/sim/*/o2sim_Kine_PPOnly.root", sDirName.Data()));
-            std::vector<TString> mcFiles = dm->GetFileNames(cmdmc);
-        
-            Eventplane *ep = new Eventplane(bmin, bmax);
-            ep->OpenFiles(mcFiles[ifile], fv0Files[ifile], ft0Files[ifile]);
-            
-            std::vector<TComplex> QvecAfv0 = ep->GetQvecA("FV0");
-            for (int i = 0; i < (int)QvecAfv0.size(); i++) hQvecfv0->Fill(QvecAfv0[i].Re(), QvecAfv0[i].Im());            
-            
-            std::vector<TComplex> QvecAft0a = ep->GetQvecA("FT0A");
-            for (int i = 0; i < (int)QvecAft0a.size(); i++) hQvecft0a->Fill(QvecAft0a[i].Re(), QvecAft0a[i].Im());            
-            
-            std::vector<TComplex> QvecAft0c = ep->GetQvecA("FT0C");
-            for (int i = 0; i < (int)QvecAft0c.size(); i++) hQvecft0c->Fill(QvecAft0c[i].Re(), QvecAft0c[i].Im()); 
-            ep->CloseFiles();
-            delete ep;
-        }
-
-        corrFV0->SaveCorrections(hQvecfv0);
-        corrFT0A->SaveCorrections(hQvecft0a);
-        corrFT0C->SaveCorrections(hQvecft0c);
-
-        return 0;
-    }
-
     if (bDoCorrections) {
         corrFV0->LoadCorrections("corrections_fv0.txt");
         corrFV0->Print();
@@ -78,7 +40,7 @@ int main(int argc, char **argv) {
    
     std::cout << "Calculating event plane to events between b = [ " << bmin << " " << bmax << " ]" << std::endl;
     
-    int filesOpen = ep->OpenFiles(mcFiles[ifile], fv0Files[ifile], ft0Files[ifile]);
+    int filesOpen = ep->OpenFiles(mcFiles, fv0Files, ft0Files);
     if (!filesOpen) continue;
 
     std::vector<TComplex> QvecAfv0 = ep->GetQvecA("FV0");
