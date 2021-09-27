@@ -1,4 +1,5 @@
 #!/bin/bash
+#
 ## sbatch usage: sbatch submit.sh <outputfile> <kinefile> <fv0digitfile> <ft0digitfile> <bmin> <bmax> <bDoCorrections>
 ## sbatch will check arguments from the comments in the
 ## beginning of this file.
